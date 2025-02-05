@@ -2,8 +2,8 @@
 Changelog for package ign_ros2_control_demos
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.10 (2025-02-05)
+-------------------
 * Publish z component instead of x (`#479 <https://github.com/ros-controls/gz_ros2_control/issues/479>`_)
 * Fix ackermann demo (`#468 <https://github.com/ros-controls/gz_ros2_control/issues/468>`_)
 * Add a namespaced example (`#457 <https://github.com/ros-controls/gz_ros2_control/issues/457>`_) (`#461 <https://github.com/ros-controls/gz_ros2_control/issues/461>`_)
