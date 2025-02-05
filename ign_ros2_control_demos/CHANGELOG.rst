@@ -2,6 +2,16 @@
 Changelog for package ign_ros2_control_demos
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Publish z component instead of x (`#479 <https://github.com/ros-controls/gz_ros2_control/issues/479>`_)
+* Fix ackermann demo (`#468 <https://github.com/ros-controls/gz_ros2_control/issues/468>`_)
+* Add a namespaced example (`#457 <https://github.com/ros-controls/gz_ros2_control/issues/457>`_) (`#461 <https://github.com/ros-controls/gz_ros2_control/issues/461>`_)
+* Add missing bridges for simulation time (backport `#443 <https://github.com/ros-controls/gz_ros2_control/issues/443>`_) (`#446 <https://github.com/ros-controls/gz_ros2_control/issues/446>`_)
+* Fix docs on humble (`#365 <https://github.com/ros-controls/gz_ros2_control/issues/365>`_)
+* fixed robot name (`#358 <https://github.com/ros-controls/gz_ros2_control/issues/358>`_) (`#360 <https://github.com/ros-controls/gz_ros2_control/issues/360>`_)
+* Contributors: Christoph Fröhlich, mergify[bot]
+
 0.7.9 (2024-07-02)
 ------------------
 * [Backport humble]  Ackermann steering example (`#352 <https://github.com/ros-controls/gz_ros2_control/issues/352>`_)

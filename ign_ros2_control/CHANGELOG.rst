@@ -2,6 +2,11 @@
 Changelog for package ign_ros2_control
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Set robot description parameter for controllers (`#477 <https://github.com/ros-controls/gz_ros2_control/issues/477>`_)
+* Contributors: AB
+
 0.7.9 (2024-07-02)
 ------------------
 * Don't crash if a wrong config was detected (`#324 <https://github.com/ros-controls/gz_ros2_control/issues/324>`_) (`#330 <https://github.com/ros-controls/gz_ros2_control/issues/330>`_)
