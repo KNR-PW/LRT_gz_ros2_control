@@ -2,6 +2,13 @@
 Changelog for package ign_ros2_control_demos
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.11 (2025-02-07)
+-------------------
+* Update diff_drive_controller.yaml (`#494 <https://github.com/ros-controls/gz_ros2_control/issues/494>`_) (`#497 <https://github.com/ros-controls/gz_ros2_control/issues/497>`_)
+  (cherry picked from commit 135332632bd340f17eeb0930b0d46b30fb956ebb)
+  Co-authored-by: Aarav Gupta <amronos275@gmail.com>
+* Contributors: mergify[bot]
+
 0.7.10 (2025-02-05)
 -------------------
 * Publish z component instead of x (`#479 <https://github.com/ros-controls/gz_ros2_control/issues/479>`_)
