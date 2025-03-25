@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.actions import RegisterEventHandler
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -39,6 +39,13 @@ def generate_launch_description():
         ]
     )
     robot_description = {'robot_description': robot_description_content}
+    robot_controllers = PathJoinSubstitution(
+        [
+            FindPackageShare('gz_ros2_control_demos'),
+            'config',
+            'ackermann_drive_controller.yaml',
+        ]
+    )
 
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
@@ -55,16 +62,18 @@ def generate_launch_description():
                    'ackermann', '-allow_renaming', 'true'],
     )
 
-    load_joint_state_broadcaster = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
-             'joint_state_broadcaster'],
-        output='screen'
+    joint_state_broadcaster_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['joint_state_broadcaster'],
     )
-
-    load_ackermann_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
-             'ackermann_steering_controller'],
-        output='screen'
+    ackermann_steering_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['ackermann_steering_controller',
+                   '--param-file',
+                   robot_controllers,
+                   ],
     )
 
     # Bridge
@@ -83,17 +92,17 @@ def generate_launch_description():
                 [PathJoinSubstitution([FindPackageShare('ros_gz_sim'),
                                        'launch',
                                        'gz_sim.launch.py'])]),
-            launch_arguments=[('gz_args', [' -r -v 4 empty.sdf'])]),
+            launch_arguments=[('gz_args', [' -r -v 1 empty.sdf'])]),
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=gz_spawn_entity,
-                on_exit=[load_joint_state_broadcaster],
+                on_exit=[joint_state_broadcaster_spawner],
             )
         ),
         RegisterEventHandler(
             event_handler=OnProcessExit(
-                target_action=load_joint_state_broadcaster,
-                on_exit=[load_ackermann_controller],
+                target_action=joint_state_broadcaster_spawner,
+                on_exit=[ackermann_steering_controller_spawner],
             )
         ),
         node_robot_state_publisher,
