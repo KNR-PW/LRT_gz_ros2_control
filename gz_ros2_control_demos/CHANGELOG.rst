@@ -2,6 +2,14 @@
 Changelog for package gz_ros2_control_demos
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.13 (2025-04-04)
+-------------------
+* Remove gtest dependency (`#543 <https://github.com/ros-controls/gz_ros2_control/issues/543>`_) (`#545 <https://github.com/ros-controls/gz_ros2_control/issues/545>`_)
+* Add Mecanum vehicle example (backport `#451 <https://github.com/ros-controls/gz_ros2_control/issues/451>`_) (`#521 <https://github.com/ros-controls/gz_ros2_control/issues/521>`_)
+* Backport updates to demos and tests (`#399 <https://github.com/ros-controls/gz_ros2_control/issues/399>`_, `#485 <https://github.com/ros-controls/gz_ros2_control/issues/485>`_, `#486 <https://github.com/ros-controls/gz_ros2_control/issues/486>`_, `#498 <https://github.com/ros-controls/gz_ros2_control/issues/498>`_, `#517 <https://github.com/ros-controls/gz_ros2_control/issues/517>`_) (`#522 <https://github.com/ros-controls/gz_ros2_control/issues/522>`_)
+* Rename ign to gz (backport `#67 <https://github.com/ros-controls/gz_ros2_control/issues/67>`_) (`#515 <https://github.com/ros-controls/gz_ros2_control/issues/515>`_)
+* Contributors: Christoph Fröhlich, mergify[bot]
+
 0.7.12 (2025-02-20)
 -------------------
 
