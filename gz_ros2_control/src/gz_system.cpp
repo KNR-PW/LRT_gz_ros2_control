@@ -14,6 +14,8 @@
 
 #include "gz_ros2_control/gz_system.hpp"
 
+#include <array>
+#include <cstddef>
 #include <limits>
 #include <map>
 #include <memory>
@@ -129,10 +131,10 @@ struct MimicJoint
 class ForceTorqueData
 {
 public:
-  /// \brief imu's name.
+  /// \brief force torque sensor's name.
   std::string name{};
 
-  /// \brief imu's topic name.
+  /// \brief force torque sensor's topic name.
   std::string topicName{};
 
   /// \brief handles to the force torque from within Gazebo
@@ -203,9 +205,10 @@ public:
   /// \brief vector with the joint's names.
   std::vector<struct jointData> joints_;
 
-  /// \brief vector with the imus .
+  /// \brief vector with the imus.
   std::vector<std::shared_ptr<ImuData>> imus_;
 
+  /// \brief vector with the force torque sensors.
   std::vector<std::shared_ptr<ForceTorqueData>> ft_sensors_;
 
   /// \brief state interfaces that will be exported to the Resource Manager
