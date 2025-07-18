@@ -73,7 +73,6 @@ jobs:
       run: |
         . /opt/ros/humble/local_setup.sh
         colcon build --packages-up-to gz_ros2_control_demos gz_ros2_control_tests
-        colcon build --packages-select force_torque_sensor_broadcaster
     - name: Run tests
       id: test
       run: |
