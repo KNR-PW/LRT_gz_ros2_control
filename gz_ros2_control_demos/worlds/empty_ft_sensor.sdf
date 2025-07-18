@@ -83,7 +83,7 @@ ign service -s /world/empty/create \
     </plugin>
     <plugin
       filename="ignition-gazebo-forcetorque-system"
-      name="gz::sim::systems::ForceTorque">
+      name="ignition::gazebo::systems::ForceTorque">
     </plugin>
 
     <light type="directional" name="sun">

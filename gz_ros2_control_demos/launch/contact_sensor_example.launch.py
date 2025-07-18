@@ -48,6 +48,14 @@ def generate_launch_description():
         ]
     )
 
+    gazebo_world = PathJoinSubstitution(
+        [
+            FindPackageShare('gz_ros2_control_demos'),
+            'worlds',
+            'empty_ft_sensor.sdf',
+        ]
+    )
+
     joint_state_broadcaster_spawner = Node(
         package='controller_manager',
         executable='spawner',
@@ -106,7 +114,7 @@ def generate_launch_description():
                 [PathJoinSubstitution([FindPackageShare('ros_gz_sim'),
                                        'launch',
                                        'gz_sim.launch.py'])]),
-            launch_arguments=[('gz_args', [gz_args, ' -r -v 1 empty.sdf'])]),
+            launch_arguments=[('gz_args', [gz_args, ' -r -v 1 ', gazebo_world])]),
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=gz_spawn_entity,
