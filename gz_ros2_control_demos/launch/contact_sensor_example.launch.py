@@ -67,6 +67,15 @@ def generate_launch_description():
             ],
     )
 
+    contact_sensor_broadcaster_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['contact_sensor_broadcaster',
+                   '--param-file',
+                  robot_controllers,
+                  ],
+    )
+
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -107,6 +116,12 @@ def generate_launch_description():
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=joint_state_broadcaster_spawner,
+                on_exit=[contact_sensor_broadcaster_spawner],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=contact_sensor_broadcaster_spawner,
                 on_exit=[joint_trajectory_controller_spawner],
             )
         ),
