@@ -643,8 +643,7 @@ void GazeboSimSystem::registerSensors(
         sim::components::ContactSensor>(_entity);
       if (contactSensorComp) {
         const std::string& topicName = contactSensorComp->Data()->GetElement("contact")->GetElement("topic")->GetValue()->GetAsString();
-        RCLCPP_INFO_STREAM(this->nh_->get_logger(), "Topic name: " << topicName );
-        
+        RCLCPP_INFO_STREAM(this->nh_->get_logger(), "Topic name: " << topicName);
       }
 
       RCLCPP_INFO_STREAM(
