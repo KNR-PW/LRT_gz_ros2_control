@@ -639,10 +639,12 @@ void GazeboSimSystem::registerSensors(
       auto contactData = std::make_shared<ContactData>();
       RCLCPP_INFO_STREAM(this->nh_->get_logger(), "Loading sensor: " << _name->Data());
 
-      auto sensorTopicComp = this->dataPtr->ecm->Component<
-        sim::components::SensorTopic>(_entity);
-      if (sensorTopicComp) {
-        RCLCPP_INFO_STREAM(this->nh_->get_logger(), "Topic name: " << sensorTopicComp->Data());
+      auto contactSensorComp = this->dataPtr->ecm->Component<
+        sim::components::ContactSensor>(_entity);
+      if (contactSensorComp) {
+        const std::string& topicName = contactSensorComp->Data()->GetElement("contact")->GetElement("topic")->GetValue()->GetAsString();
+        RCLCPP_INFO_STREAM(this->nh_->get_logger(), "Topic name: " << topicName );
+        
       }
 
       RCLCPP_INFO_STREAM(
@@ -795,14 +797,14 @@ hardware_interface::return_type GazeboSimSystem::read(
 
   for (unsigned int i = 0; i < this->dataPtr->contact_sensors_.size(); ++i) {
     if (this->dataPtr->contact_sensors_[i]->topicName.empty()) {
-      auto sensorTopicComp = this->dataPtr->ecm->Component<
-        sim::components::SensorTopic>(this->dataPtr->contact_sensors_[i]->sim_contact_sensors_);
-      if (sensorTopicComp) {
-        this->dataPtr->contact_sensors_[i]->topicName = sensorTopicComp->Data();
+      auto contactSensorComp = this->dataPtr->ecm->Component<
+        sim::components::ContactSensor>(this->dataPtr->contact_sensors_[i]->sim_contact_sensors_);
+      if (contactSensorComp) {
+        const std::string& topicName = contactSensorComp->Data()->GetElement("contact")->GetElement("topic")->GetValue()->GetAsString();
+        this->dataPtr->contact_sensors_[i]->topicName = topicName;
         RCLCPP_INFO_STREAM(
           this->nh_->get_logger(), "ContactSensor " << this->dataPtr->contact_sensors_[i]->name <<
-            " has a topic name: " << sensorTopicComp->Data());
-
+            " has a topic name: " << topicName);
         this->dataPtr->node.Subscribe(
           this->dataPtr->contact_sensors_[i]->topicName, &ContactData::OnContact,
           this->dataPtr->contact_sensors_[i].get());
