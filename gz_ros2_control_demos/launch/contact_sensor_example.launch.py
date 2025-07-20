@@ -78,7 +78,7 @@ def generate_launch_description():
     contact_sensor_broadcaster_spawner = Node(
         package='controller_manager',
         executable='spawner',
-        arguments=['contact_sensor_broadcaster',
+        arguments=['contact_sensors_broadcaster',
                    '--param-file',
                   robot_controllers,
                   ],

@@ -8,8 +8,8 @@ controller_manager:
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    contact_sensor_broadcaster:
-      type: contact_sensor_broadcaster/ContactSensorBroadcaster
+    contact_sensors_broadcaster:
+      type: contact_sensors_broadcaster/ContactSensorsBroadcaster
 
 
 joint_trajectory_controller:
@@ -29,7 +29,7 @@ joint_trajectory_controller:
         i_clamp: 0.0
         antiwindup: false
 
-contact_sensor_broadcaster:
+contact_sensors_broadcaster:
   ros__parameters:
     frame_ids:
     - sphere_collision
