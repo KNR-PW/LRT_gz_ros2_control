@@ -642,8 +642,21 @@ void GazeboSimSystem::registerSensors(
       auto contactSensorComp = this->dataPtr->ecm->Component<
         sim::components::ContactSensor>(_entity);
       if (contactSensorComp) {
-        const std::string& topicName = contactSensorComp->Data()->GetElement("contact")->GetElement("topic")->GetValue()->GetAsString();
-        RCLCPP_INFO_STREAM(this->nh_->get_logger(), "Topic name: " << topicName);
+        auto contactElem = contactSensorComp->Data()->GetElement("contact");
+        if(contactElem) {
+          auto topicElem = contactElem->GetElement("topic");
+          if(topicElem) {
+            const std::string& topicName = topicElem->GetValue()->GetAsString();
+            RCLCPP_INFO_STREAM(this->nh_->get_logger(), "Topic name: " << topicName);
+          }
+          else {
+            RCLCPP_ERROR_STREAM(this->nh_->get_logger(), "No topic element in <contact> element with name: " << _name->Data());
+          }
+        }
+        else {
+          RCLCPP_ERROR_STREAM(this->nh_->get_logger(), "No contact element in <sensor> component with name: " << _name->Data());
+        }
+
       }
 
       RCLCPP_INFO_STREAM(
@@ -799,14 +812,28 @@ hardware_interface::return_type GazeboSimSystem::read(
       auto contactSensorComp = this->dataPtr->ecm->Component<
         sim::components::ContactSensor>(this->dataPtr->contact_sensors_[i]->sim_contact_sensors_);
       if (contactSensorComp) {
-        const std::string& topicName = contactSensorComp->Data()->GetElement("contact")->GetElement("topic")->GetValue()->GetAsString();
-        this->dataPtr->contact_sensors_[i]->topicName = topicName;
-        RCLCPP_INFO_STREAM(
-          this->nh_->get_logger(), "ContactSensor " << this->dataPtr->contact_sensors_[i]->name <<
-            " has a topic name: " << topicName);
-        this->dataPtr->node.Subscribe(
-          this->dataPtr->contact_sensors_[i]->topicName, &ContactData::OnContact,
-          this->dataPtr->contact_sensors_[i].get());
+        auto contactElem = contactSensorComp->Data()->GetElement("contact");
+        if(contactElem) {
+          auto topicElem = contactElem->GetElement("topic");
+          if(topicElem) {
+            const std::string& topicName = topicElem->GetValue()->GetAsString();
+            this->dataPtr->contact_sensors_[i]->topicName = topicName;
+            RCLCPP_INFO_STREAM(
+              this->nh_->get_logger(), "ContactSensor " << this->dataPtr->contact_sensors_[i]->name <<
+              " has a topic name: " << topicName);
+            this->dataPtr->node.Subscribe(
+              this->dataPtr->contact_sensors_[i]->topicName, &ContactData::OnContact,
+              this->dataPtr->contact_sensors_[i].get());
+          }
+          else {
+            RCLCPP_ERROR_STREAM(this->nh_->get_logger(), "No topic element in <contact> element with name: "
+              << this->dataPtr->contact_sensors_[i]->name);
+          }
+        }
+        else {
+          RCLCPP_ERROR_STREAM(this->nh_->get_logger(), "No contact element in <sensor> component with name: "
+            << this->dataPtr->contact_sensors_[i]->name);
+        }
       }
     }
   }
