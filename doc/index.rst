@@ -163,7 +163,7 @@ We should include:
 
 
 Using force-torque sensors in simulation
------------------------------------------------------------
+----------------------------------------
 
 To use ``force-torque`` sensors in *gz_ros2_control* you should define its parameters in your URDF or SDF (see the `SDF specification <http://sdformat.org/spec?ver=1.12&elem=sensor#sensor_force_torque>`__)
 
@@ -177,7 +177,6 @@ To use ``force-torque`` sensors in *gz_ros2_control* you should define its param
   </sensor>
 
 It is important to add this as ``reference`` sensor in the ``<gazebo>`` tag in your URDF file.
-
 
 Add the gz_ros2_control plugin
 ==========================================
