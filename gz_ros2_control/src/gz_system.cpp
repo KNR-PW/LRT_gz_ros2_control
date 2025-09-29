@@ -163,20 +163,19 @@ public:
   /// \brief An array per FT
   double contact_sensor_data_;
 
+  /// \brief Last stamp when contact callback happend (in order to know if contact is false!)
+  rclcpp::Time stamp_ = rclcpp::Time(0, 0, RCL_ROS_TIME);
+
   /// \brief callback to get the Force Torque topic values
   void OnContact(const GZ_MSGS_NAMESPACE Contacts & _msg);
 };
 
 void ContactData::OnContact(const GZ_MSGS_NAMESPACE Contacts & _msg)
 {
-  if(_msg.contact().empty())
-  {
-    this->contact_sensor_data_ = 0;
-  }
-  else
-  {
-    this->contact_sensor_data_ = 1;
-  }
+  rclcpp::Time new_stamp(_msg.header().stamp().sec(), _msg.header().stamp().nsec(), 
+    RCL_ROS_TIME);
+  this->stamp_ = new_stamp;
+  this->contact_sensor_data_ = 1;
 }
 
 class ImuData
@@ -744,8 +743,8 @@ CallbackReturn GazeboSimSystem::on_deactivate(const rclcpp_lifecycle::State & pr
 }
 
 hardware_interface::return_type GazeboSimSystem::read(
-  const rclcpp::Time & /*time*/,
-  const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & time,
+  const rclcpp::Duration & period)
 {
   for (unsigned int i = 0; i < this->dataPtr->joints_.size(); ++i) {
     if (this->dataPtr->joints_[i].sim_joint == sim::kNullEntity) {
@@ -804,6 +803,21 @@ hardware_interface::return_type GazeboSimSystem::read(
           this->dataPtr->ft_sensors_[i]->topicName, &ForceTorqueData::OnForceTorque,
           this->dataPtr->ft_sensors_[i].get());
       }
+    }
+  }
+
+  // WARNING: EXPERIMENTAL SOLUTION (BARTŁOMIEJ KRAJEWSKI 29.09.2025):
+  // Always change to false when `last_contact_time` + `duration` < `actual_time`
+  for (unsigned int i = 0; i < this->dataPtr->contact_sensors_.size(); ++i) 
+  {
+    if(this->dataPtr->contact_sensors_[i]->contact_sensor_data_ == 0)
+    {
+      continue;
+    }
+    
+    if(this->dataPtr->contact_sensors_[i]->stamp_ + period < time)
+    {
+      this->dataPtr->contact_sensors_[i]->contact_sensor_data_ = 0;
     }
   }
 
