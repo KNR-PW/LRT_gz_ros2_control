@@ -1,0 +1,38 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 10  # Hz
+
+    joint_trajectory_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    contact_sensors_broadcaster:
+      type: contact_sensors_broadcaster/ContactSensorsBroadcaster
+
+
+joint_trajectory_controller:
+  ros__parameters:
+    joints:
+      - sphere_arm_joint
+    command_interfaces:
+      - velocity
+    state_interfaces:
+      - position
+      - velocity
+    gains:
+      slider_to_cart:
+        p: 10.0
+        i: 0.0
+        d: 0.0
+        i_clamp: 0.0
+        antiwindup: false
+
+contact_sensors_broadcaster:
+  ros__parameters:
+    frame_ids:
+    - sphere_collision
+    sensor_names:
+    - sphere_contact_sensor
+    

@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<robot name="diff_drive" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:arg name="namespace" default="" />
+
+  <material name="orange">
+    <color rgba="0.8 0.4 0.0 1.0"/>
+  </material>
+
+  <material name="black">
+    <color rgba="0 0 0 1.0"/>
+  </material>
+
+  <material name="white">
+    <color rgba="1 1 1 1.0"/>
+  </material>
+
+  <!-- Base Link -->
+  <link name="base"/>
+
+  <!-- Sphere Link -->
+  <link name="sphere">
+    <collision name="sphere_collision">
+      <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="1.0"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
+      <geometry>
+        <sphere radius="1.0"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+
+    <inertial>
+      <origin xyz="-0.151427 -0 0.5" rpy="0 0 0"/>
+      <mass value="1.14395"/>
+      <inertia
+        ixx="0.126164"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.416519"
+        iyz="0.0"
+        izz="0.481014"/>
+    </inertial>
+  </link>
+
+  <joint name="base_sphere_joint" type="fixed">
+    <origin xyz="0.0 0.0 100.0" rpy="0 0 0"/>
+    <parent link="base"/>
+    <child link="sphere"/>
+  </joint>
+
+  <link name="arm">
+
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <mass value="2.0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <box size="0.1 0.1 1.0"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <box size="0.1 0.1 1.0"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="sphere_arm_joint" type="revolute">
+    <origin xyz="0.0 0.0 0.5" rpy="0.0 0.0 0.0"/>
+    <parent link="sphere"/>
+    <child link="arm"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <limit lower="-3.0" upper="3.0" effort="10.0" velocity="10.0"/>
+  </joint>
+
+  <gazebo reference="sphere">
+    <sensor name='sphere_contact_sensor' type='contact'>
+      <contact>
+        <collision>base_fixed_joint_lump__sphere_collision_collision</collision>
+        <topic>contact_sensor</topic>
+      </contact>
+        <always_on>1</always_on>
+        <update_rate>100</update_rate>
+    </sensor>
+  </gazebo>
+
+  <ros2_control name="GazeboSimSystem" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+    <joint name="sphere_arm_joint">
+      <command_interface name="velocity">
+        <param name="min">-10</param>
+        <param name="max">10</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <sensor name="sphere_contact_sensor" type="contact_sensor">
+      <state_interface name="contact"/>
+    </sensor>
+  </ros2_control>
+
+  <gazebo>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <ros>
+        <namespace>$(arg namespace)</namespace>
+      </ros>
+      <parameters>$(find gz_ros2_control_demos)/config/contact_sensor.yaml</parameters>
+    </plugin>
+  </gazebo>
+
+</robot>

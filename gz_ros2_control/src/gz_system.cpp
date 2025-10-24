@@ -26,11 +26,14 @@
 #ifdef GZ_HEADERS
 #include <gz/msgs/imu.pb.h>
 #include <gz/msgs/wrench.pb.h>
+#include <gz/msgs/contacts.pb.h>
 
 #include <gz/physics/Geometry.hh>
 #include <gz/sim/components/AngularVelocity.hh>
+#include <gz/sim/components/ContactSensor.hh>
 #include <gz/sim/components/Imu.hh>
 #include <gz/sim/components/ForceTorque.hh>
+#include <gz/sim/components/JointForce.hh>
 #include <gz/sim/components/JointAxis.hh>
 #include <gz/sim/components/JointForceCmd.hh>
 #include <gz/sim/components/JointPosition.hh>
@@ -53,11 +56,14 @@
 #else
 #include <ignition/msgs/imu.pb.h>
 #include <ignition/msgs/wrench.pb.h>
+#include <ignition/msgs/contacts.pb.h>
 
 #include <ignition/math/Vector3.hh>
 #include <ignition/gazebo/components/AngularVelocity.hh>
+#include <ignition/gazebo/components/ContactSensor.hh>
 #include <ignition/gazebo/components/Imu.hh>
 #include <ignition/gazebo/components/ForceTorque.hh>
+a #include <ignition/gazebo/components/JointForce.hh>
 #include <ignition/gazebo/components/JointAxis.hh>
 #include <ignition/gazebo/components/JointForceCmd.hh>
 #include <ignition/gazebo/components/JointPosition.hh>
@@ -157,6 +163,39 @@ void ForceTorqueData::OnForceTorque(const GZ_MSGS_NAMESPACE Wrench & _msg)
   this->ft_sensor_data_[5] = _msg.torque().z();
 }
 
+class ContactData
+{
+public:
+  /// \brief contact sensor's name.
+  std::string name{};
+
+  /// \brief contact sensor's topic name.
+  std::string topicName{};
+
+  /// \brief contact sensor's collisions, for which sensor publishes data
+  std::string collision_name;
+
+  /// \brief handles to the contact from within Gazebo
+  sim::Entity sim_contact_sensors_ = sim::kNullEntity;
+
+  /// \brief An array per FT
+  double contact_sensor_data_;
+
+  /// \brief Last stamp when contact callback happend (in order to know if contact is false!)
+  rclcpp::Time stamp_ = rclcpp::Time(0, 0, RCL_ROS_TIME);
+
+  /// \brief callback to get the Force Torque topic values
+  void OnContact(const GZ_MSGS_NAMESPACE Contacts & _msg);
+};
+
+void ContactData::OnContact(const GZ_MSGS_NAMESPACE Contacts & _msg)
+{
+  rclcpp::Time new_stamp(_msg.header().stamp().sec(), _msg.header().stamp().nsec(), 
+    RCL_ROS_TIME);
+  this->stamp_ = new_stamp;
+  this->contact_sensor_data_ = 1;
+}
+
 class ImuData
 {
 public:
@@ -210,6 +249,9 @@ public:
 
   /// \brief vector with the force torque sensors.
   std::vector<std::shared_ptr<ForceTorqueData>> ft_sensors_;
+
+  /// \brief vector with the force torque sensors.
+  std::vector<std::shared_ptr<ContactData>> contact_sensors_;
 
   /// \brief state interfaces that will be exported to the Resource Manager
   std::vector<hardware_interface::StateInterface> state_interfaces_;
@@ -608,6 +650,59 @@ void GazeboSimSystem::registerSensors(
       this->dataPtr->ft_sensors_.push_back(ftData);
       return true;
     });
+
+    this->dataPtr->ecm->Each<sim::components::ContactSensor,
+    sim::components::Name>(
+    [&](const sim::Entity & _entity,
+    const sim::components::ContactSensor *,
+    const sim::components::Name * _name) -> bool
+    {
+      auto contactData = std::make_shared<ContactData>();
+      RCLCPP_INFO_STREAM(this->nh_->get_logger(), "Loading sensor: " << _name->Data());
+
+      auto contactSensorComp = this->dataPtr->ecm->Component<
+        sim::components::ContactSensor>(_entity);
+      if (contactSensorComp) {
+        auto contactElem = contactSensorComp->Data()->GetElement("contact");
+        if(contactElem) {
+          auto topicElem = contactElem->GetElement("topic");
+          if(topicElem) {
+            const std::string& topicName = topicElem->GetValue()->GetAsString();
+            RCLCPP_INFO_STREAM(this->nh_->get_logger(), "Topic name: " << topicName);
+          }
+          else {
+            RCLCPP_ERROR_STREAM(this->nh_->get_logger(), "No topic element in <contact> element with name: " << _name->Data());
+          }
+        }
+        else {
+          RCLCPP_ERROR_STREAM(this->nh_->get_logger(), "No contact element in <sensor> component with name: " << _name->Data());
+        }
+
+      }
+
+      RCLCPP_INFO_STREAM(
+        this->nh_->get_logger(), "\tState:");
+      contactData->name = _name->Data();
+      contactData->sim_contact_sensors_ = _entity;
+
+      hardware_interface::ComponentInfo component;
+      for (auto & comp : sensor_components_) {
+        if (comp.name == _name->Data()) {
+          component = comp;
+        }
+      }
+
+      for (const auto & state_interface : component.state_interfaces) {
+        RCLCPP_INFO_STREAM(this->nh_->get_logger(), "\t\t " << state_interface.name);
+
+        this->dataPtr->state_interfaces_.emplace_back(
+          contactData->name,
+          state_interface.name,
+          &contactData->contact_sensor_data_);
+      }
+      this->dataPtr->contact_sensors_.push_back(contactData);
+      return true;
+    });
 }
 
 CallbackReturn
@@ -670,8 +765,8 @@ CallbackReturn GazeboSimSystem::on_deactivate(const rclcpp_lifecycle::State & pr
 }
 
 hardware_interface::return_type GazeboSimSystem::read(
-  const rclcpp::Time & /*time*/,
-  const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & time,
+  const rclcpp::Duration & period)
 {
   for (unsigned int i = 0; i < this->dataPtr->joints_.size(); ++i) {
     if (this->dataPtr->joints_[i].sim_joint == sim::kNullEntity) {
@@ -740,6 +835,52 @@ hardware_interface::return_type GazeboSimSystem::read(
         this->dataPtr->node.Subscribe(
           this->dataPtr->ft_sensors_[i]->topicName, &ForceTorqueData::OnForceTorque,
           this->dataPtr->ft_sensors_[i].get());
+      }
+    }
+  }
+
+  // WARNING: EXPERIMENTAL SOLUTION (BARTŁOMIEJ KRAJEWSKI 29.09.2025):
+  // Always change to false when `last_contact_time` + `duration` < `actual_time`
+  for (unsigned int i = 0; i < this->dataPtr->contact_sensors_.size(); ++i) 
+  {
+    if(this->dataPtr->contact_sensors_[i]->contact_sensor_data_ == 0)
+    {
+      continue;
+    }
+    
+    if(this->dataPtr->contact_sensors_[i]->stamp_ + period < time)
+    {
+      this->dataPtr->contact_sensors_[i]->contact_sensor_data_ = 0;
+    }
+  }
+
+  for (unsigned int i = 0; i < this->dataPtr->contact_sensors_.size(); ++i) {
+    if (this->dataPtr->contact_sensors_[i]->topicName.empty()) {
+      auto contactSensorComp = this->dataPtr->ecm->Component<
+        sim::components::ContactSensor>(this->dataPtr->contact_sensors_[i]->sim_contact_sensors_);
+      if (contactSensorComp) {
+        auto contactElem = contactSensorComp->Data()->GetElement("contact");
+        if(contactElem) {
+          auto topicElem = contactElem->GetElement("topic");
+          if(topicElem) {
+            const std::string& topicName = topicElem->GetValue()->GetAsString();
+            this->dataPtr->contact_sensors_[i]->topicName = topicName;
+            RCLCPP_INFO_STREAM(
+              this->nh_->get_logger(), "ContactSensor " << this->dataPtr->contact_sensors_[i]->name <<
+              " has a topic name: " << topicName);
+            this->dataPtr->node.Subscribe(
+              this->dataPtr->contact_sensors_[i]->topicName, &ContactData::OnContact,
+              this->dataPtr->contact_sensors_[i].get());
+          }
+          else {
+            RCLCPP_ERROR_STREAM(this->nh_->get_logger(), "No topic element in <contact> element with name: "
+              << this->dataPtr->contact_sensors_[i]->name);
+          }
+        }
+        else {
+          RCLCPP_ERROR_STREAM(this->nh_->get_logger(), "No contact element in <sensor> component with name: "
+            << this->dataPtr->contact_sensors_[i]->name);
+        }
       }
     }
   }
