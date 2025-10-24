@@ -37,7 +37,7 @@ If you want compile this from source, you have to choose the Gazebo version firs
   cd ~/gz_ros2_control_ws
   colcon build
 
-If you want to use ``harmonic``, then follow the instructions in the `official Gazebo Harmonic documentation <https://gazebosim.org/docs/harmonic/ros_installation/#gazebo-harmonic-with-ros-2-humble-or-rolling-use-with-caution>`__ how to install Gazebo Harmonic on ROS 2 humble, i.e, ``apt-get install gz-harmonic ros-humble-ros-gzharmonic ros-humble-ros-gzharmonic-bridge``. Additionally, you need to `install the rosdep rules <https://github.com/osrf/osrf-rosdep#installing-rosdep-rules-to-resolve-gazebo-harmonic-libraries>`__ for Gazebo Harmonic.
+If you want to use ``harmonic``, then follow the instructions in the `official Gazebo Harmonic documentation <https://gazebosim.org/docs/harmonic/ros_installation/#gazebo-harmonic-with-ros-2-humble>`__ how to install Gazebo Harmonic on ROS 2 humble, i.e, ``apt-get install gz-harmonic ros-humble-ros-gzharmonic ros-humble-ros-gzharmonic-bridge``. Additionally, you need to `install the rosdep rules <https://github.com/osrf/osrf-rosdep#installing-rosdep-rules-to-resolve-gazebo-harmonic-libraries>`__ for Gazebo Harmonic.
 
 Then create a workspace, clone the correct branch of this repo and compile it by setting the environment variable ``GZ_VERSION``:
 
@@ -218,17 +218,6 @@ Additionally, one can specify a namespace and remapping rules, which will be for
     </plugin>
   </gazebo>
 
-Default gz_ros2_control Behavior
------------------------------------------------------------
-
-By default, without a ``<plugin>`` tag, *gz_ros2_control* will attempt to get all of the information it needs to interface with a ros2_control-based controller out of the URDF. This is sufficient for most cases, and good for at least getting started.
-
-The default behavior provides the following ros2_control interfaces:
-
-* hardware_interface::JointStateInterface
-* hardware_interface::EffortJointInterface
-* hardware_interface::VelocityJointInterface
-
 Advanced: custom gz_ros2_control Simulation Plugins
 -----------------------------------------------------------
 
@@ -237,19 +226,19 @@ The *gz_ros2_control* Gazebo plugin also provides a pluginlib-based interface to
 These plugins must inherit the ``gz_ros2_control::GazeboSimSystemInterface``, which implements a simulated *ros2_control*
 ``hardware_interface::SystemInterface``. SystemInterface provides API-level access to read and command joint properties.
 
-The respective GazeboSimSystemInterface sub-class is specified in a URDF model and is loaded when the
-robot model is loaded. For example, the following XML will load the default plugin:
+The respective GazeboSimSystemInterface is specified in a URDF model and is loaded when the
+robot model is loaded. For example, the following XML will load a custom plugin:
 
 .. code-block:: xml
 
   <ros2_control name="GazeboSimSystem" type="system">
     <hardware>
-      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      <plugin>gz_ros2_control_demos/GazeboCustomSimSystem</plugin>
     </hardware>
     ...
   <ros2_control>
   <gazebo>
-    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+    <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="libgz_ros2_control-system">
       ...
     </plugin>
   </gazebo>
