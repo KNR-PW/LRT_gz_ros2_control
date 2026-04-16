@@ -212,7 +212,7 @@ void ContactData::OnContact(const GZ_MSGS_NAMESPACE Contacts & _msg)
       this->contact_sensor_data_.tz = wrench.torque().z();
     }
     
-     // RCLCPP_INFO(rclcpp::get_logger("gz_ros2_control"), "c: %f, fx: %f, fy: %f, fz: %f, tx: %f, ty: %f, tz: %f", this->contact_sensor_data_.contact ,this->contact_sensor_data_.fx, this->contact_sensor_data_.fy, this->contact_sensor_data_.fz, this->contact_sensor_data_.tx, this->contact_sensor_data_.ty, this->contact_sensor_data_.tz);
+    RCLCPP_INFO(rclcpp::get_logger("gz_ros2_control"), "c: %f, fx: %f, fy: %f, fz: %f, tx: %f, ty: %f, tz: %f", this->contact_sensor_data_.contact ,this->contact_sensor_data_.fx, this->contact_sensor_data_.fy, this->contact_sensor_data_.fz, this->contact_sensor_data_.tx, this->contact_sensor_data_.ty, this->contact_sensor_data_.tz);
   }
   else{
     this->contact_sensor_data_ = {0, 0, 0, 0, 0, 0, 0};
