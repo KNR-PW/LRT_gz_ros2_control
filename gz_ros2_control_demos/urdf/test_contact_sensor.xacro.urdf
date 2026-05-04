@@ -15,10 +15,8 @@
     <color rgba="1 1 1 1.0"/>
   </material>
 
-  <!-- Base Link -->
   <link name="base"/>
 
-  <!-- Sphere Link -->
   <link name="sphere">
     <collision name="sphere_collision">
       <origin xyz="0.0 0 0.0" rpy="0 0 0"/>
@@ -49,13 +47,11 @@
   </link>
 
   <joint name="base_sphere_joint" type="fixed">
-    <origin xyz="0.0 0.0 100.0" rpy="0 0 0"/>
-    <parent link="base"/>
+    <origin xyz="0.0 0.0 5.0" rpy="0 0 0"/> <parent link="base"/>
     <child link="sphere"/>
   </joint>
 
   <link name="arm">
-
     <inertial>
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
       <mass value="2.0"/>
@@ -99,6 +95,7 @@
     <hardware>
       <plugin>gz_ros2_control/GazeboSimSystem</plugin>
     </hardware>
+    
     <joint name="sphere_arm_joint">
       <command_interface name="velocity">
         <param name="min">-10</param>
@@ -107,8 +104,15 @@
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
+
     <sensor name="sphere_contact_sensor" type="contact_sensor">
       <state_interface name="contact"/>
+      <state_interface name="force.x"/>
+      <state_interface name="force.y"/>
+      <state_interface name="force.z"/>
+      <state_interface name="torque.x"/>
+      <state_interface name="torque.y"/>
+      <state_interface name="torque.z"/>
     </sensor>
   </ros2_control>
 
