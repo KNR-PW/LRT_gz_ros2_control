@@ -35,4 +35,5 @@ contact_sensors_broadcaster:
     - sphere_collision
     sensor_names:
     - sphere_contact_sensor
+    publish_with_change: true
     

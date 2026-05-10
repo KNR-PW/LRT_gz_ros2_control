@@ -63,7 +63,7 @@
 #include <ignition/gazebo/components/ContactSensor.hh>
 #include <ignition/gazebo/components/Imu.hh>
 #include <ignition/gazebo/components/ForceTorque.hh>
-a #include <ignition/gazebo/components/JointForce.hh>
+#include <ignition/gazebo/components/JointForce.hh>
 #include <ignition/gazebo/components/JointAxis.hh>
 #include <ignition/gazebo/components/JointForceCmd.hh>
 #include <ignition/gazebo/components/JointPosition.hh>
