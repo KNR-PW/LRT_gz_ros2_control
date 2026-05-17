@@ -134,6 +134,12 @@ struct MimicJoint
   std::vector<std::string> interfaces_to_mimic;
 };
 
+struct ContactState{
+  double contact;
+  double fx, fy, fz,
+         tx, ty, tz;
+};
+
 class ForceTorqueData
 {
 public:
@@ -179,7 +185,7 @@ public:
   sim::Entity sim_contact_sensors_ = sim::kNullEntity;
 
   /// \brief An array per FT
-  double contact_sensor_data_;
+  ContactState contact_sensor_data_;
 
   /// \brief Last stamp when contact callback happend (in order to know if contact is false!)
   rclcpp::Time stamp_ = rclcpp::Time(0, 0, RCL_ROS_TIME);
@@ -190,10 +196,25 @@ public:
 
 void ContactData::OnContact(const GZ_MSGS_NAMESPACE Contacts & _msg)
 {
-  rclcpp::Time new_stamp(_msg.header().stamp().sec(), _msg.header().stamp().nsec(), 
-    RCL_ROS_TIME);
+  rclcpp::Time new_stamp(_msg.header().stamp().sec(), _msg.header().stamp().nsec(), RCL_ROS_TIME);
   this->stamp_ = new_stamp;
-  this->contact_sensor_data_ = 1;
+
+  if(_msg.contact_size() > 0){
+    this->contact_sensor_data_.contact = 1;
+    if(_msg.contact(0).wrench_size() > 0){
+      const auto & wrench = _msg.contact(0).wrench(0).body_1_wrench();
+
+      this->contact_sensor_data_.fx = wrench.force().x();
+      this->contact_sensor_data_.fy = wrench.force().y();
+      this->contact_sensor_data_.fz = wrench.force().z();
+      this->contact_sensor_data_.tx = wrench.torque().x();
+      this->contact_sensor_data_.ty = wrench.torque().y();
+      this->contact_sensor_data_.tz = wrench.torque().z();
+    }
+    }
+  else{
+    this->contact_sensor_data_ = {0, 0, 0, 0, 0, 0, 0};
+  }
 }
 
 class ImuData
@@ -693,12 +714,35 @@ void GazeboSimSystem::registerSensors(
       }
 
       for (const auto & state_interface : component.state_interfaces) {
-        RCLCPP_INFO_STREAM(this->nh_->get_logger(), "\t\t " << state_interface.name);
+        RCLCPP_INFO_STREAM(this->nh_->get_logger(), "\t\t" << state_interface.name);
 
-        this->dataPtr->state_interfaces_.emplace_back(
-          contactData->name,
-          state_interface.name,
-          &contactData->contact_sensor_data_);
+        double* data_ptr = nullptr;
+
+        if (state_interface.name == "contact") {
+          data_ptr = &contactData->contact_sensor_data_.contact;
+        } else if (state_interface.name == "force.x") {
+          data_ptr = &contactData->contact_sensor_data_.fx;
+        } else if (state_interface.name == "force.y") {
+          data_ptr = &contactData->contact_sensor_data_.fy;
+        } else if (state_interface.name == "force.z") {
+          data_ptr = &contactData->contact_sensor_data_.fz;
+        } else if (state_interface.name == "torque.x") {
+          data_ptr = &contactData->contact_sensor_data_.tx;
+        } else if (state_interface.name == "torque.y") {
+          data_ptr = &contactData->contact_sensor_data_.ty;
+        } else if (state_interface.name == "torque.z") {
+          data_ptr = &contactData->contact_sensor_data_.tz;
+        }
+
+        if (data_ptr) {
+          this->dataPtr->state_interfaces_.emplace_back(
+            contactData->name,
+            state_interface.name,
+            data_ptr);
+        } else {
+          RCLCPP_WARN(this->nh_->get_logger(), "Unknown interface: %s for sensor: %s", 
+                      state_interface.name.c_str(), contactData->name.c_str());
+        }
       }
       this->dataPtr->contact_sensors_.push_back(contactData);
       return true;
@@ -843,14 +887,14 @@ hardware_interface::return_type GazeboSimSystem::read(
   // Always change to false when `last_contact_time` + `duration` < `actual_time`
   for (unsigned int i = 0; i < this->dataPtr->contact_sensors_.size(); ++i) 
   {
-    if(this->dataPtr->contact_sensors_[i]->contact_sensor_data_ == 0)
+    if(this->dataPtr->contact_sensors_[i]->contact_sensor_data_.contact == 0)
     {
       continue;
     }
     
     if(this->dataPtr->contact_sensors_[i]->stamp_ + period < time)
     {
-      this->dataPtr->contact_sensors_[i]->contact_sensor_data_ = 0;
+      this->dataPtr->contact_sensors_[i]->contact_sensor_data_.contact = 0;
     }
   }
 
