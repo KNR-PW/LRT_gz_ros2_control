@@ -187,8 +187,11 @@ public:
   /// \brief An array per FT
   ContactState contact_sensor_data_;
 
-  /// \brief Last stamp when contact callback happend (in order to know if contact is false!)
+  /// \brief Last stamp when last change happend
   rclcpp::Time stamp_ = rclcpp::Time(0, 0, RCL_ROS_TIME);
+
+  /// \brief Topic duration
+  rclcpp::Duration duration_ = rclcpp::Duration(0, 0);
 
   /// \brief callback to get the Force Torque topic values
   void OnContact(const GZ_MSGS_NAMESPACE Contacts & _msg);
@@ -197,6 +200,7 @@ public:
 void ContactData::OnContact(const GZ_MSGS_NAMESPACE Contacts & _msg)
 {
   rclcpp::Time new_stamp(_msg.header().stamp().sec(), _msg.header().stamp().nsec(), RCL_ROS_TIME);
+  
   this->stamp_ = new_stamp;
 
   if(_msg.contact_size() > 0){
@@ -699,6 +703,16 @@ void GazeboSimSystem::registerSensors(
           RCLCPP_ERROR_STREAM(this->nh_->get_logger(), "No contact element in <sensor> component with name: " << _name->Data());
         }
 
+        const double updateRate = contactSensorComp->Data()->Get<double>("update_rate");
+        
+        RCLCPP_INFO_STREAM(this->nh_->get_logger(),
+          "Sensor [" << _name->Data() << "] update rate: " << updateRate << " Hz");
+        
+        if (updateRate > 0.0)
+        {
+          contactData->duration_ =
+            rclcpp::Duration::from_seconds(1.0 / updateRate);
+        }
       }
 
       RCLCPP_INFO_STREAM(
@@ -892,7 +906,8 @@ hardware_interface::return_type GazeboSimSystem::read(
       continue;
     }
     
-    if(this->dataPtr->contact_sensors_[i]->stamp_ + period < time)
+    if(this->dataPtr->contact_sensors_[i]->stamp_ + 
+      this->dataPtr->contact_sensors_[i]->duration_ < time)
     {
       this->dataPtr->contact_sensors_[i]->contact_sensor_data_.contact = 0;
     }
